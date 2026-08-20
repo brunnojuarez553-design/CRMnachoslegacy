@@ -1,0 +1,9 @@
+Nacho's Legacy Garage OS — US Omnichannel + Export Edition
+2026-08-20
+- SMS / Text primary communication architecture
+- Instagram and Web Intake unified in Communication Center
+- Phone call logging model
+- WhatsApp demoted to optional channel
+- New Leads module
+- CSV exports for leads, customers, vehicles, collision cases, estimates, jobs, conversations, calendar and growth attribution
+- EN / ES retained across platform and exports

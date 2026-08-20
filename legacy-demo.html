@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#070b14" />
+  <title>Austral Garage OS — MVP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">A</div>
+        <div>
+          <strong>Austral</strong>
+          <span>Garage OS</span>
+        </div>
+      </div>
+
+      <div class="workspace-card">
+        <div class="workspace-logo">VM</div>
+        <div>
+          <strong>Valentino Motors</strong>
+          <span>La Guaira · Venezuela</span>
+        </div>
+        <button class="icon-button" aria-label="Cambiar empresa">⌄</button>
+      </div>
+
+      <nav class="nav-list" aria-label="Navegación principal">
+        <button class="nav-item active" data-view="dashboard"><span>⌂</span>Dashboard</button>
+        <button class="nav-item" data-view="crm"><span>◎</span>CRM</button>
+        <button class="nav-item" data-view="advisor"><span>✦</span>AI Advisor</button>
+        <button class="nav-item" data-view="agenda"><span>□</span>Agenda</button>
+        <button class="nav-item" data-view="growth"><span>↗</span>Growth Hub</button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="health-mini">
+          <div class="health-head"><span>Austral Score</span><strong>87</strong></div>
+          <div class="progress"><i style="width:87%"></i></div>
+          <small>Muy buen rendimiento</small>
+        </div>
+        <button class="nav-item"><span>⚙</span>Configuración</button>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobileMenu" aria-label="Abrir menú">☰</button>
+        <div class="topbar-search">
+          <span>⌕</span>
+          <input id="globalSearch" placeholder="Buscar clientes, vehículos, presupuestos..." />
+          <kbd>⌘ K</kbd>
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-button notification-button" aria-label="Notificaciones">◌<b>4</b></button>
+          <button class="profile-button"><span>BJ</span><div><strong>Bruno Juárez</strong><small>Administrador</small></div></button>
+        </div>
+      </header>
+
+      <section class="view active dashboard-view-premium" id="dashboard-view">
+        <div class="dashboard-topline">
+          <div class="dashboard-greeting">
+            <div class="live-chip"><i></i> OPERACIÓN EN VIVO</div>
+            <p class="eyebrow">JUEVES, 6 DE AGOSTO · 19:39</p>
+            <h1>Buenas tardes, Bruno.</h1>
+            <p>Austral está monitoreando ventas, atención y rendimiento del taller en tiempo real.</p>
+          </div>
+          <div class="dashboard-actions">
+            <button class="ghost-action"><span>↗</span> Exportar reporte</button>
+            <button class="primary-button premium-cta" id="newLeadButton">+ Nuevo lead</button>
+          </div>
+        </div>
+
+        <section class="executive-hero">
+          <div class="executive-main">
+            <div class="hero-glow"></div>
+            <div class="executive-label"><span>✦</span> AUSTRAL INTELLIGENCE</div>
+            <h2>Tu taller generó <strong>USD 18.460</strong><br>con Austral este mes.</h2>
+            <p>El rendimiento comercial creció un 18,4%. Detectamos oportunidades activas que podrían sumar otros USD 4.280.</p>
+            <div class="executive-actions">
+              <button class="primary-button" data-jump="crm">Recuperar ventas</button>
+              <button class="inline-link" data-jump="growth">Ver análisis completo <span>→</span></button>
+            </div>
+            <div class="hero-proof">
+              <div><b>92%</b><span>consultas respondidas por IA</span></div>
+              <div><b>4 min</b><span>tiempo medio de respuesta</span></div>
+              <div><b>17</b><span>ventas atribuidas</span></div>
+            </div>
+          </div>
+          <aside class="score-card-premium">
+            <div class="score-title"><div><span>SALUD DEL NEGOCIO</span><strong>Austral Score</strong></div><em>Excelente</em></div>
+            <div class="score-orbit"><div class="score-inner"><strong>87</strong><span>/100</span></div></div>
+            <div class="score-breakdown">
+              <div><span>Captación</span><b>91</b><i><em style="width:91%"></em></i></div>
+              <div><span>Conversión</span><b>84</b><i><em style="width:84%"></em></i></div>
+              <div><span>Reputación</span><b>96</b><i><em style="width:96%"></em></i></div>
+            </div>
+          </aside>
+        </section>
+
+        <div class="premium-metrics">
+          <article class="premium-metric featured">
+            <div class="metric-top"><span>Ingresos atribuidos</span><i>$</i></div>
+            <strong>USD 18.460</strong>
+            <div class="metric-footer"><b>+18,4%</b><span>vs. mes anterior</span><em class="spark-bars"><i></i><i></i><i></i><i></i><i></i><i></i></em></div>
+          </article>
+          <article class="premium-metric">
+            <div class="metric-top"><span>Consultas nuevas</span><i>◎</i></div>
+            <strong>84</strong>
+            <div class="metric-footer"><b>+12</b><span>nuevas este período</span><em class="mini-trend">↗</em></div>
+          </article>
+          <article class="premium-metric">
+            <div class="metric-top"><span>Tasa de conversión</span><i>%</i></div>
+            <strong>31,8%</strong>
+            <div class="metric-footer"><b>+4,1 pts</b><span>mejora mensual</span><em class="mini-trend">↗</em></div>
+          </article>
+          <article class="premium-metric">
+            <div class="metric-top"><span>Reputación Google</span><i>★</i></div>
+            <strong>4.9</strong>
+            <div class="metric-footer"><b>+8</b><span>reseñas nuevas</span><em class="review-dots">★★★★★</em></div>
+          </article>
+        </div>
+
+        <div class="dashboard-grid premium-grid">
+          <article class="panel revenue-panel premium-panel">
+            <div class="panel-header premium-panel-head">
+              <div><span>RENDIMIENTO COMERCIAL</span><h3>Ingresos generados</h3><p>Facturación atribuida a acciones de Austral</p></div>
+              <div class="chart-head-actions"><div class="chart-total"><span>Últimos 7 días</span><strong>USD 46.500</strong></div><select><option>Últimos 7 días</option><option>Este mes</option></select></div>
+            </div>
+            <div class="chart-wrap"><canvas id="revenueChart" width="900" height="310"></canvas></div>
+            <div class="chart-summary"><div><i></i><span>Facturación</span><strong>USD 46.500</strong></div><div><i></i><span>Objetivo</span><strong>USD 52.000</strong></div><div class="goal-progress"><span>89% del objetivo mensual</span><b><i style="width:89%"></i></b></div></div>
+          </article>
+
+          <article class="panel action-panel premium-panel action-center-premium">
+            <div class="panel-header"><div><span>ACTION CENTER</span><h3>Prioridades de hoy</h3><p>USD 6.130 en oportunidades detectadas</p></div><button class="icon-button">•••</button></div>
+            <div class="action-list premium-actions" id="actionList">
+              <button><i class="urgent"></i><div><strong>Responder 3 leads VIP</strong><span>USD 2.480 potenciales · hace 20 min</span></div><b>→</b></button>
+              <button><i class="warning"></i><div><strong>Recuperar 9 presupuestos</strong><span>Probabilidad promedio de cierre: 62%</span></div><b>→</b></button>
+              <button><i class="success"></i><div><strong>Solicitar 6 reseñas</strong><span>Trabajos terminados esta semana</span></div><b>→</b></button>
+              <button><i class="info"></i><div><strong>Publicar caso BMW M340i</strong><span>Alto potencial para Google e Instagram</span></div><b>→</b></button>
+            </div>
+            <button class="all-actions">Ver las 12 recomendaciones <span>→</span></button>
+          </article>
+
+          <article class="panel pipeline-panel premium-panel pipeline-premium">
+            <div class="panel-header"><div><span>CONVERSIÓN</span><h3>Embudo comercial</h3><p>Del primer contacto a la venta</p></div><button class="text-button" data-jump="crm">Abrir CRM →</button></div>
+            <div class="funnel premium-funnel">
+              <div><span>Consultas</span><strong>84</strong><small>100%</small></div><b>→</b>
+              <div><span>Calificadas</span><strong>51</strong><small>60,7%</small></div><b>→</b>
+              <div><span>Presupuestos</span><strong>29</strong><small>34,5%</small></div><b>→</b>
+              <div class="highlight"><span>Ventas</span><strong>17</strong><small>20,2%</small></div>
+            </div>
+            <div class="conversion-insight"><span>✦</span><p><strong>La mayor fuga está entre calificación y presupuesto.</strong> Responder 10 minutos más rápido podría mejorar la conversión estimada un 6%.</p></div>
+          </article>
+
+          <article class="panel activity-panel premium-panel activity-premium">
+            <div class="panel-header"><div><span>TIEMPO REAL</span><h3>Actividad reciente</h3><p>Todo lo que está ocurriendo ahora</p></div><div class="live-indicator"><i></i>Live</div></div>
+            <div class="timeline premium-timeline">
+              <div><i>AI</i><p><strong>Austral AI calificó un lead</strong><span>Volkswagen Golf GTI · Stage 1</span></p><time>19:31</time></div>
+              <div><i>WA</i><p><strong>Nueva consulta por WhatsApp</strong><span>Eliminación de EGR · Toyota Hilux</span></p><time>19:24</time></div>
+              <div><i>★</i><p><strong>Nueva reseña de 5 estrellas</strong><span>“Excelente atención y resultados”</span></p><time>18:56</time></div>
+              <div><i>$</i><p><strong>Presupuesto aceptado</strong><span>Audi A3 · USD 680</span></p><time>18:42</time></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="crm-view">
+        <div class="page-heading compact">
+          <div><p class="eyebrow">VENTAS</p><h1>Pipeline comercial</h1><p>Gestioná cada oportunidad desde la consulta hasta la venta.</p></div>
+          <div class="heading-actions"><button class="secondary-button">Filtrar</button><button class="primary-button" id="newLeadButton2">+ Nuevo lead</button></div>
+        </div>
+        <div class="crm-stats"><span><b id="totalLeads">12</b> oportunidades</span><span><b>USD 14.880</b> valor potencial</span><span><b>28 min</b> respuesta promedio</span></div>
+        <div class="kanban" id="kanban"></div>
+      </section>
+
+      <section class="view" id="advisor-view">
+        <div class="page-heading compact">
+          <div><p class="eyebrow">AUSTRAL INTELLIGENCE</p><h1>AI Service Advisor</h1><p>Atiende, califica y organiza consultas las 24 horas.</p></div>
+          <div class="status-pill"><i></i>En línea</div>
+        </div>
+        <div class="advisor-layout">
+          <aside class="conversation-list">
+            <div class="list-search"><input placeholder="Buscar conversaciones" /></div>
+            <div class="conversation active"><span class="avatar">MG</span><div><strong>Martín Gómez</strong><p>Volkswagen Golf GTI 2021</p></div><time>19:31</time></div>
+            <div class="conversation"><span class="avatar">CR</span><div><strong>Carlos Rodríguez</strong><p>Consulta por EGR</p></div><time>19:24</time></div>
+            <div class="conversation"><span class="avatar">AS</span><div><strong>Andrea Silva</strong><p>Detailing completo</p></div><time>18:48</time></div>
+          </aside>
+          <article class="chat-panel">
+            <div class="chat-header"><div><span class="avatar">MG</span><div><strong>Martín Gómez</strong><p>WhatsApp · Lead calificado</p></div></div><button class="secondary-button">Ver ficha</button></div>
+            <div class="chat-messages" id="chatMessages">
+              <div class="message bot"><span>✦</span><p>Hola Martín, soy el asesor virtual de Valentino Motors. ¿En qué vehículo podemos ayudarte?</p></div>
+              <div class="message user"><p>Tengo un Golf GTI 2021 y quiero hacerle Stage 1.</p></div>
+              <div class="message bot"><span>✦</span><p>Perfecto. ¿El vehículo está original o tiene alguna modificación? También podés enviarme una foto o video.</p></div>
+              <div class="message user"><p>Está original, tiene 54.000 km.</p></div>
+            </div>
+            <div class="chat-input"><button>＋</button><input id="chatInput" placeholder="Escribí un mensaje..."/><button class="send-button" id="sendMessage">Enviar</button></div>
+          </article>
+          <aside class="lead-insight">
+            <div class="insight-head"><span>AI SUMMARY</span><strong>Lead de alta intención</strong></div>
+            <div class="score-ring"><div><strong>86</strong><span>Lead score</span></div></div>
+            <dl><div><dt>Vehículo</dt><dd>VW Golf GTI 2021</dd></div><div><dt>Servicio</dt><dd>Stage 1</dd></div><div><dt>Kilometraje</dt><dd>54.000 km</dd></div><div><dt>Urgencia</dt><dd>Esta semana</dd></div><div><dt>Valor estimado</dt><dd>USD 420</dd></div></dl>
+            <button class="primary-button full">Crear presupuesto</button>
+          </aside>
+        </div>
+      </section>
+
+      <section class="view" id="agenda-view">
+        <div class="page-heading compact"><div><p class="eyebrow">OPERACIÓN</p><h1>Agenda del taller</h1><p>Organizá turnos, capacidad y trabajos del equipo.</p></div><button class="primary-button" id="newAppointment">+ Nuevo turno</button></div>
+        <div class="calendar-toolbar"><button>←</button><div><strong>Agosto 2026</strong><span>Semana del 3 al 9</span></div><button>→</button><div class="calendar-modes"><button class="active">Semana</button><button>Mes</button></div></div>
+        <div class="calendar" id="calendar"></div>
+      </section>
+
+      <section class="view" id="growth-view">
+        <div class="page-heading compact"><div><p class="eyebrow">ADQUISICIÓN</p><h1>Growth Hub</h1><p>Medí cómo Google, la web y la IA generan nuevos clientes.</p></div><button class="primary-button">Crear campaña</button></div>
+        <div class="metric-grid growth-metrics">
+          <article class="metric-card"><div class="metric-icon">G</div><span>Posición promedio</span><strong>2,4</strong><small class="positive">↑ 1,2 posiciones</small></article>
+          <article class="metric-card"><div class="metric-icon">⌁</div><span>Visitas orgánicas</span><strong>1.842</strong><small class="positive">↑ 23% este mes</small></article>
+          <article class="metric-card"><div class="metric-icon">☎</div><span>Acciones desde Google</span><strong>318</strong><small>176 llamadas · 92 rutas</small></article>
+          <article class="metric-card"><div class="metric-icon">%</div><span>Conversión web</span><strong>8,7%</strong><small class="positive">↑ 1,6 puntos</small></article>
+        </div>
+        <div class="growth-grid">
+          <article class="panel keywords-panel"><div class="panel-header"><div><span>SEO LOCAL</span><h3>Palabras clave principales</h3></div><button class="text-button">Ver todas →</button></div><div class="keyword-table">
+            <div><span>reprogramación automotriz la guaira</span><b>#1</b><em class="positive">↑ 2</em></div>
+            <div><span>eliminar egr la guaira</span><b>#2</b><em class="positive">↑ 1</em></div>
+            <div><span>taller automotriz la guaira</span><b>#3</b><em>—</em></div>
+            <div><span>stage 1 venezuela</span><b>#5</b><em class="positive">↑ 4</em></div>
+          </div></article>
+          <article class="panel source-panel"><div class="panel-header"><div><span>ATRIBUCIÓN</span><h3>Origen de clientes</h3></div></div><div class="source-chart"><div class="donut"><span><strong>84</strong>leads</span></div><ul><li><i></i>Google orgánico <b>42%</b></li><li><i></i>WhatsApp directo <b>27%</b></li><li><i></i>Instagram <b>19%</b></li><li><i></i>Referidos <b>12%</b></li></ul></div></article>
+          <article class="panel full-span"><div class="panel-header"><div><span>PÁGINAS DE CONVERSIÓN</span><h3>Rendimiento de landings</h3></div><button class="secondary-button">+ Nueva landing</button></div><div class="landing-table"><div class="table-head"><span>Página</span><span>Visitas</span><span>Leads</span><span>Conversión</span><span>Estado</span></div><div><strong>/reprogramacion</strong><span>684</span><span>74</span><span>10,8%</span><b class="live">Activa</b></div><div><strong>/eliminacion-egr</strong><span>438</span><span>39</span><span>8,9%</span><b class="live">Activa</b></div><div><strong>/detailing</strong><span>291</span><span>19</span><span>6,5%</span><b class="warning-pill">Optimizar</b></div></div></article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="leadModal">
+    <div class="modal">
+      <button class="modal-close" data-close-modal>×</button>
+      <span class="eyebrow">NUEVA OPORTUNIDAD</span><h2>Crear lead</h2><p>Registrá una consulta manualmente en el pipeline.</p>
+      <form id="leadForm">
+        <label>Nombre completo<input name="name" required placeholder="Ej. Juan Pérez" /></label>
+        <div class="form-grid"><label>Vehículo<input name="vehicle" required placeholder="Ej. BMW M340i" /></label><label>Servicio<input name="service" required placeholder="Ej. Stage 2" /></label></div>
+        <div class="form-grid"><label>Valor estimado<input name="value" type="number" min="0" placeholder="500" /></label><label>Origen<select name="source"><option>WhatsApp</option><option>Google</option><option>Instagram</option><option>Referido</option></select></label></div>
+        <button class="primary-button full" type="submit">Crear oportunidad</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
