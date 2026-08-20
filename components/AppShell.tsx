@@ -9,27 +9,33 @@ import {
 import LanguageSwitch from "./LanguageSwitch";
 import { useLanguage } from "./LanguageProvider";
 
-const nav = [
-  ["dashboard", "/dashboard", LayoutDashboard],
-  ["leads", "/leads", UserPlus],
-  ["collision", "/collision-center", Wrench],
-  ["customers", "/customers", Users],
-  ["vehicles", "/vehicles", CarFront],
-  ["estimates", "/estimates", FileText],
-  ["repair", "/repair-board", ClipboardList],
-  ["conversations", "/conversations", MessageCircle],
-  ["calendar", "/calendar", CalendarDays],
-  ["growth", "/growth", TrendingUp],
+const navGroups = [
+  { label: "operations", items: [
+    ["dashboard", "/dashboard", LayoutDashboard],
+    ["collision", "/collision-center", Wrench],
+    ["repair", "/repair-board", ClipboardList],
+  ]},
+  { label: "customersGroup", items: [
+    ["leads", "/leads", UserPlus],
+    ["conversations", "/conversations", MessageCircle],
+    ["estimates", "/estimates", FileText],
+    ["calendar", "/calendar", CalendarDays],
+    ["customers", "/customers", Users],
+    ["vehicles", "/vehicles", CarFront],
+  ]},
+  { label: "business", items: [
+    ["growth", "/growth", TrendingUp],
+  ]},
 ] as const;
 
 const copy = {
   en: {
     nav: { dashboard:"Dashboard", leads:"Leads", collision:"Collision Center", customers:"Customers", vehicles:"Vehicles", estimates:"Estimates", repair:"Repair Board", conversations:"Communication Center", calendar:"Calendar", growth:"Growth" },
-    operation:"OPERATIONS", mainShop:"Main Shop", location:"Lansdowne · Pennsylvania", health:"Shop Health", month:"+4 pts this month", settings:"Settings", plan:"Collision Growth", search:"Search customer, vehicle, claim or estimate...", intelligence:"Legacy Intelligence", owner:"Owner"
+    operation:"OPERATIONS", operations:"OPERATIONS", customersGroup:"CUSTOMERS", business:"BUSINESS", mainShop:"Main Shop", location:"Lansdowne · Pennsylvania", health:"Shop Health", month:"+4 pts this month", settings:"Settings", plan:"Collision Growth", search:"Search customer, vehicle, claim or estimate...", intelligence:"Legacy Intelligence", owner:"Owner"
   },
   es: {
     nav: { dashboard:"Dashboard", leads:"Leads", collision:"Centro de Colisiones", customers:"Clientes", vehicles:"Vehículos", estimates:"Presupuestos", repair:"Tablero de Reparación", conversations:"Centro de Comunicación", calendar:"Agenda", growth:"Crecimiento" },
-    operation:"OPERACIÓN", mainShop:"Taller principal", location:"Lansdowne · Pennsylvania", health:"Salud del taller", month:"+4 pts este mes", settings:"Configuración", plan:"Collision Growth", search:"Buscar cliente, vehículo, claim o presupuesto...", intelligence:"Legacy Intelligence", owner:"Propietario"
+    operation:"OPERACIÓN", operations:"OPERACIÓN", customersGroup:"CLIENTES Y SEGUIMIENTO", business:"NEGOCIO", mainShop:"Taller principal", location:"Lansdowne · Pennsylvania", health:"Salud del taller", month:"+4 pts este mes", settings:"Configuración", plan:"Collision Growth", search:"Buscar cliente, vehículo, claim o presupuesto...", intelligence:"Legacy Intelligence", owner:"Propietario"
   }
 } as const;
 
@@ -52,14 +58,18 @@ export default function AppShell({ children, email }: { children: React.ReactNod
         </div>
 
         <nav className="main-nav">
-          <p className="nav-label">{c.operation}</p>
-          {nav.map(([key, href, Icon]) => {
-            const active = pathname === href || pathname.startsWith(`${href}/`);
-            return <Link key={href} href={href} className={active ? "active" : ""}>
-              <span className="nav-icon"><Icon size={18}/></span><span>{c.nav[key]}</span>
-              {key === "conversations" && <em>4</em>}
-            </Link>;
-          })}
+          {navGroups.map((group) => (
+            <div className="nav-group" key={group.label}>
+              <p className="nav-label">{c[group.label]}</p>
+              {group.items.map(([key, href, Icon]) => {
+                const active = pathname === href || pathname.startsWith(`${href}/`);
+                return <Link key={href} href={href} className={active ? "active" : ""}>
+                  <span className="nav-icon"><Icon size={18}/></span><span>{c.nav[key]}</span>
+                  {key === "conversations" && <em>4</em>}
+                </Link>;
+              })}
+            </div>
+          ))}
         </nav>
 
         <div className="side-bottom">

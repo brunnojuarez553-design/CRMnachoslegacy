@@ -186,3 +186,33 @@ The top-bar switch changes the full app between **EN / ES** and stores the prefe
 - Original customer messages are preserved when translations are used.
 - Service-role and messaging tokens stay server-side only.
 - Public intake should use rate limiting and CAPTCHA/Turnstile before full-scale launch.
+
+
+## Live customer intake + repair progress SMS
+
+The Collision Center now loads real `collision_cases` from Supabase. Opening a case shows the exact contact, vehicle, insurance/claim data, customer description and all photos submitted through `/api/intake/nachos`.
+
+Repair workflow:
+
+1. Open a real Collision Case.
+2. Review the customer's submitted information and photos.
+3. Select one of the customer-facing repair stages.
+4. Review/edit the SMS preview.
+5. Click **Confirm progress & send SMS**.
+6. Garage OS updates the case status, sends the SMS through Twilio, logs the outbound conversation, and stores a repair-history record with SMS status.
+
+Customer-facing stages:
+
+`Vehicle Received → Repair Started → Body Work → Paint → Reassembly → Quality Control → Ready for Pickup → Delivered`
+
+Apply migration:
+
+`supabase/migrations/20260820223000_repair_sms_tracking.sql`
+
+Required Twilio variables remain:
+
+```env
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_PHONE_NUMBER=+1XXXXXXXXXX
+```

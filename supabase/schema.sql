@@ -215,3 +215,13 @@ do $$ begin
   create policy "company members manage phone_call_logs" on public.phone_call_logs for all using (public.is_company_member(company_id)) with check (public.is_company_member(company_id));
 exception when duplicate_object then null; end $$;
 create index if not exists phone_call_logs_company_idx on public.phone_call_logs(company_id,created_at desc);
+
+
+-- Repair progress SMS tracking
+alter table public.contacts add column if not exists preferred_language text default 'en' check (preferred_language in ('en','es'));
+alter table public.collision_cases add column if not exists preferred_language text default 'en' check (preferred_language in ('en','es'));
+alter table public.repair_updates add column if not exists customer_message text;
+alter table public.repair_updates add column if not exists sms_status text default 'not_requested';
+alter table public.repair_updates add column if not exists sms_sid text;
+alter table public.repair_updates add column if not exists notified_at timestamptz;
+create index if not exists repair_updates_case_created_idx on public.repair_updates(case_id,created_at desc);
