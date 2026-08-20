@@ -7,6 +7,8 @@ import {
   MessageCircle, Search, Settings, Sparkles, TrendingUp, Users, Wrench, UserPlus
 } from "lucide-react";
 import LanguageSwitch from "./LanguageSwitch";
+import LegacyIntelligencePanel from "./LegacyIntelligencePanel";
+import { useState } from "react";
 import { useLanguage } from "./LanguageProvider";
 
 const navGroups = [
@@ -43,6 +45,7 @@ export default function AppShell({ children, email }: { children: React.ReactNod
   const pathname = usePathname();
   const { language } = useLanguage();
   const c = copy[language];
+  const [intelligenceOpen,setIntelligenceOpen]=useState(false);
   return (
     <div className="app-shell collision-theme">
       <aside className="sidebar">
@@ -89,12 +92,13 @@ export default function AppShell({ children, email }: { children: React.ReactNod
           <div className="topbar-actions">
             <LanguageSwitch />
             <button className="icon-button notification" aria-label="Notifications"><Bell size={18}/><i/></button>
-            <button className="ai-quick"><Sparkles size={16}/> {c.intelligence}</button>
+            <button className="ai-quick" onClick={()=>setIntelligenceOpen(true)}><Sparkles size={16}/> {c.intelligence}</button>
             <div className="user-menu"><div className="avatar legacy-avatar"><img src="/nachos-legacy-logo.webp" alt="NL" /></div><div><strong>Nacho</strong><span>{email || c.owner}</span></div><ChevronDown size={15}/></div>
           </div>
         </header>
         {children}
       </main>
+      <LegacyIntelligencePanel open={intelligenceOpen} onClose={()=>setIntelligenceOpen(false)}/>
     </div>
   );
 }

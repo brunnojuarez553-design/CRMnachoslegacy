@@ -1,218 +1,51 @@
-# Nacho's Legacy — Garage OS
+# Nacho's Legacy Garage OS — GitHub Ready Demo
 
-Professional bilingual CRM / collision-management workspace for **Nacho's Legacy Body Shop, Lansdowne, Pennsylvania**.
+Esta carpeta está preparada para subir directamente a GitHub y desplegar en Vercel.
 
-## Current product focus
+## ÚNICO PASO EN VERCEL PARA ACTIVAR LEGACY INTELLIGENCE
 
-The platform is now US-first for communication:
+En Vercel abrí:
 
-- **SMS / Text Messages** — primary customer messaging channel.
-- **Instagram DMs** — acquisition and conversation channel.
-- **Landing + Website Intake** — structured collision inquiries with photos.
-- **Phone calls** — CRM logging model included.
-- **WhatsApp** — optional, not part of the primary workflow.
+**Project → Settings → Environment Variables**
 
-> iMessage itself is not treated as an open business API. Garage OS uses SMS/Text as the automatable phone-messaging channel while keeping manual call/message context in the CRM.
+Creá exactamente esta variable:
 
-## Modules
-
-- Executive Dashboard
-- Leads
-- Collision Center
-- Customers
-- Vehicles
-- Estimates / Revenue Recovery
-- Repair Board
-- Communication Center
-- Calendar / Shop Capacity
-- Growth / Revenue Attribution
-- Settings
-- Legacy Intelligence (EN / ES)
-
-## Professional data exports
-
-Every major operational area can be downloaded as UTF-8 CSV for Excel / Google Sheets:
-
-- Leads
-- Customers
-- Vehicles
-- Collision cases
-- Estimates
-- Active repair jobs
-- Conversations
-- Calendar
-- Growth attribution
-
-Lists have a global **Export CSV** button and major record tables/cards include per-record export controls. Export headers follow the active EN / ES language.
-
-## Local install
-
-```bash
-npm install
-npm run build
-npm run dev
+```text
+GROQ_API_KEY
 ```
 
-Open `http://localhost:3000/dashboard`.
+Pegá como valor tu API key de Groq y activala para **Production, Preview y Development**.
 
-## Supabase
+Después hacé **Redeploy**.
 
-Apply migrations with:
+## Qué funciona sin ninguna otra key
 
-```powershell
-$env:SUPABASE_PROJECT_REF="YOUR_PROJECT_REF"
-npm run supabase:setup
-```
+- Dashboard completo.
+- Menú prioritario del taller.
+- EN / ES.
+- Leads, Customers, Vehicles, Estimates, Repair Board, Communication Center, Calendar y Growth.
+- Collision Center con casos de demostración abribles.
+- Fichas con información completa del cliente y vehículo.
+- Selector de avances del vehículo.
+- Vista previa editable del SMS.
+- Simulación profesional de “Confirm progress & send SMS” en modo demo.
+- Historial visual de avances.
+- Exportaciones CSV.
+- Legacy Intelligence con respuestas fallback incluso si Groq todavía no está configurado.
 
-The newest migration is:
+## Qué activa GROQ_API_KEY
 
-`supabase/migrations/20260820210000_us_communication_exports.sql`
+El botón **Legacy Intelligence** pasa de respuestas de respaldo a respuestas generadas en vivo por Groq.
 
-It enables SMS as a channel, sets the Nacho workspace to `America/New_York`, and creates `phone_call_logs`.
+## Integraciones reales para una segunda etapa
 
-## Environment variables
+Supabase, Twilio SMS e Instagram están preparadas en el código, pero son opcionales para la presentación. Sus variables están documentadas en `.env.example`.
 
-Copy `.env.example` to `.env.local` and configure server secrets in Vercel.
+## Deploy
 
-### Supabase
+1. Subir todo el contenido de esta carpeta al repositorio de GitHub.
+2. Importar el repositorio en Vercel.
+3. Agregar `GROQ_API_KEY`.
+4. Deploy / Redeploy.
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-```
-
-### SMS / Text (primary)
-
-```env
-TWILIO_ACCOUNT_SID=
-TWILIO_AUTH_TOKEN=
-TWILIO_PHONE_NUMBER=+1XXXXXXXXXX
-```
-
-Inbound SMS webhook:
-
-`POST https://YOUR-GARAGE-OS.vercel.app/api/webhooks/sms`
-
-Outbound message API:
-
-```json
-POST /api/messages/send
-{
-  "channel": "sms",
-  "to": "+1610XXXXXXX",
-  "body": "Your message"
-}
-```
-
-### Instagram
-
-```env
-META_VERIFY_TOKEN=
-META_APP_SECRET=
-META_GRAPH_VERSION=v23.0
-INSTAGRAM_ACCESS_TOKEN=
-INSTAGRAM_ACCOUNT_ID=
-```
-
-Instagram webhook:
-
-`https://YOUR-GARAGE-OS.vercel.app/api/webhooks/instagram`
-
-Outbound:
-
-```json
-POST /api/messages/send
-{
-  "channel": "instagram",
-  "to": "INSTAGRAM_SCOPED_USER_ID",
-  "body": "Your message"
-}
-```
-
-Meta permissions / review are still required before using customer accounts in production.
-
-### Optional WhatsApp
-
-The prior WhatsApp backend remains available for future use but is no longer surfaced as a primary Nacho's Legacy channel.
-
-## Landing / Website Intake
-
-Endpoint:
-
-`POST /api/intake/nachos`
-
-Recommended flow:
-
-`Instagram / Google / Website → Landing → Photo upload → Intake API → Contact → Vehicle → Collision Case → Lead → Estimate → Repair Board`
-
-The landing uploads photos first to Cloudinary or Supabase Storage and then sends the resulting URLs to Garage OS.
-
-Example payload:
-
-```json
-{
-  "name": "Maria Rodriguez",
-  "phone": "+16105551234",
-  "email": "maria@email.com",
-  "preferredLanguage": "en",
-  "intakeType": "collision",
-  "vehicle": { "year": 2022, "make": "Honda", "model": "Accord" },
-  "drivable": true,
-  "damageArea": "Rear",
-  "description": "Rear-end collision",
-  "insuranceCompany": "GEICO",
-  "hasClaim": true,
-  "claimNumber": "G-123456",
-  "photos": [{ "url": "https://.../photo1.jpg" }],
-  "attribution": {
-    "source": "instagram",
-    "medium": "bio",
-    "landing": "landingnachoslegacy",
-    "utm_source": "instagram",
-    "utm_medium": "bio"
-  }
-}
-```
-
-## Language
-
-The top-bar switch changes the full app between **EN / ES** and stores the preference. The selected language is also used by exports and can be passed to Legacy Intelligence.
-
-## Safety / operational rules
-
-- Estimates and pricing require human approval.
-- AI damage observations are suggestions, not final diagnoses.
-- Original customer messages are preserved when translations are used.
-- Service-role and messaging tokens stay server-side only.
-- Public intake should use rate limiting and CAPTCHA/Turnstile before full-scale launch.
-
-
-## Live customer intake + repair progress SMS
-
-The Collision Center now loads real `collision_cases` from Supabase. Opening a case shows the exact contact, vehicle, insurance/claim data, customer description and all photos submitted through `/api/intake/nachos`.
-
-Repair workflow:
-
-1. Open a real Collision Case.
-2. Review the customer's submitted information and photos.
-3. Select one of the customer-facing repair stages.
-4. Review/edit the SMS preview.
-5. Click **Confirm progress & send SMS**.
-6. Garage OS updates the case status, sends the SMS through Twilio, logs the outbound conversation, and stores a repair-history record with SMS status.
-
-Customer-facing stages:
-
-`Vehicle Received → Repair Started → Body Work → Paint → Reassembly → Quality Control → Ready for Pickup → Delivered`
-
-Apply migration:
-
-`supabase/migrations/20260820223000_repair_sms_tracking.sql`
-
-Required Twilio variables remain:
-
-```env
-TWILIO_ACCOUNT_SID=
-TWILIO_AUTH_TOKEN=
-TWILIO_PHONE_NUMBER=+1XXXXXXXXXX
-```
+No hace falta subir `.env.local` ni ninguna API key a GitHub.

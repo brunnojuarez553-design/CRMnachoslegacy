@@ -11,10 +11,30 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const companyId = await getAuthenticatedCompanyId();
-    if (!companyId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const { id } = await context.params;
     const input = schema.parse(await request.json());
+    const demoMode = id.startsWith("demo-") || !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    if (demoMode) {
+      const now = new Date().toISOString();
+      return NextResponse.json({
+        ok: true,
+        mode: "demo",
+        stage: input.stage,
+        message: input.message || buildRepairSms({ stage: input.stage, customerName: "Maria Rodriguez", vehicle: "2022 Honda Accord", language: "en" }),
+        update: {
+          id: `demo-${Date.now()}`,
+          stage: input.stage,
+          customer_message: input.message || null,
+          sms_status: input.notifyCustomer ? "sent" : "not_requested",
+          sms_sid: input.notifyCustomer ? `DEMO-SMS-${Date.now()}` : null,
+          notified_at: input.notifyCustomer ? now : null,
+          created_at: now
+        }
+      });
+    }
+
+    const companyId = await getAuthenticatedCompanyId();
+    if (!companyId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const admin = createAdminClient();
 
     const { data: repairCase, error: caseError } = await admin
@@ -72,7 +92,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     }).select("id,stage,customer_message,sms_status,sms_sid,notified_at,created_at").single();
     if (repairUpdateError) throw repairUpdateError;
 
-    return NextResponse.json({ ok: true, stage: input.stage, message, update });
+    return NextResponse.json({ ok: true, mode: "live", stage: input.stage, message, update });
   } catch (error) {
     console.error("Repair stage update error", error);
     if (error instanceof z.ZodError) return NextResponse.json({ error: "Invalid stage update" }, { status: 400 });
