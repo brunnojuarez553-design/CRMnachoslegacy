@@ -1,0 +1,19 @@
+"use client";
+import ModulePage,{StatusPill} from "@/components/ModulePage";
+import ExportButton,{ExportColumn} from "@/components/ExportButton";
+import { useLanguage } from "@/components/LanguageProvider";
+type CalendarEvent={day:{en:string;es:string};time:string;customer:{en:string;es:string};detail:{en:string;es:string};open?:boolean};
+const events:CalendarEvent[]=[
+{day:{en:"Mon 24",es:"Lun 24"},time:"8:00",customer:{en:"Sofia Martinez",es:"Sofia Martinez"},detail:{en:"Vehicle drop-off",es:"Ingreso del vehículo"}},
+{day:{en:"Mon 24",es:"Lun 24"},time:"11:30",customer:{en:"Maria Rodriguez",es:"Maria Rodriguez"},detail:{en:"Insurance inspection",es:"Inspección del seguro"}},
+{day:{en:"Mon 24",es:"Lun 24"},time:"3:00",customer:{en:"Anna Williams",es:"Anna Williams"},detail:{en:"Pickup",es:"Retiro"}},
+{day:{en:"Tue 25",es:"Mar 25"},time:"9:30",customer:{en:"David Brown",es:"David Brown"},detail:{en:"Vehicle drop-off",es:"Ingreso del vehículo"}},
+{day:{en:"Tue 25",es:"Mar 25"},time:"1:00",customer:{en:"John Miller",es:"John Miller"},detail:{en:"Paint review",es:"Revisión de pintura"}},
+{day:{en:"Wed 26",es:"Mié 26"},time:"10:00",customer:{en:"Carlos Rivera",es:"Carlos Rivera"},detail:{en:"Pickup",es:"Retiro"}},
+{day:{en:"Wed 26",es:"Mié 26"},time:"2:30",customer:{en:"Kevin Jones",es:"Kevin Jones"},detail:{en:"Parts arrival",es:"Llegada de repuestos"}},
+{day:{en:"Thu 27",es:"Jue 27"},time:"8:30",customer:{en:"Luis Perez",es:"Luis Perez"},detail:{en:"QC / delivery",es:"QC / entrega"}},
+{day:{en:"Thu 27",es:"Jue 27"},time:"4:00",customer:{en:"Open capacity",es:"Capacidad disponible"},detail:{en:"2.5 hours",es:"2,5 horas"},open:true},
+{day:{en:"Fri 28",es:"Vie 28"},time:"9:00",customer:{en:"Estimate block",es:"Bloque de presupuestos"},detail:{en:"3 appointments",es:"3 turnos"}},
+{day:{en:"Fri 28",es:"Vie 28"},time:"1:30",customer:{en:"Shop review",es:"Revisión del taller"},detail:{en:"Weekly ops",es:"Operación semanal"}},
+];
+export default function Page(){const{language}=useLanguage();const es=language==="es";const columns:ExportColumn<CalendarEvent>[]=[{key:"day",label:es?"Día":"Day",value:r=>r.day[language]},{key:"time",label:es?"Hora":"Time"},{key:"customer",label:es?"Cliente / Evento":"Customer / Event",value:r=>r.customer[language]},{key:"detail",label:es?"Detalle":"Detail",value:r=>r.detail[language]},{key:"open",label:es?"Estado":"Status",value:r=>r.open?(es?"Disponible":"Open"):(es?"Reservado":"Booked")}];const days=["Mon 24","Tue 25","Wed 26","Thu 27","Fri 28"] as const;return <ModulePage eyebrow={es?"CAPACIDAD DEL TALLER":"SHOP CAPACITY"} title={es?"Agenda":"Calendar"} description={es?"Coordiná ingresos, inspecciones, etapas de producción y entregas.":"Coordinate drop-offs, inspections, production milestones and deliveries."} headerAction={<ExportButton rows={events} columns={columns} filename={`nachos-legacy-calendar-${language}`}/>} stats={es?[{label:"Hoy",value:"6",meta:"eventos programados"},{label:"Ingresos",value:"3",meta:"próximas 48 horas"},{label:"Entregas",value:"4",meta:"esta semana"},{label:"Capacidad",value:"82%",meta:"utilización semanal"}]:[{label:"Today",value:"6",meta:"scheduled events"},{label:"Drop-offs",value:"3",meta:"next 48 hours"},{label:"Deliveries",value:"4",meta:"this week"},{label:"Capacity",value:"82%",meta:"weekly utilization"}]}><div className="week-calendar">{days.map(day=>{const list=events.filter(e=>e.day.en===day);return <section className="calendar-day" key={day}><header><strong>{list[0]?.day[language]||day}</strong></header>{list.map(event=><article className="calendar-event" key={`${day}-${event.time}-${event.customer.en}`}><span>{event.time}</span><div><strong>{event.customer[language]}</strong><small>{event.detail[language]}</small></div><StatusPill tone={event.open?"success":"info"}>{event.open?(es?"Disponible":"Open"):(es?"Reservado":"Booked")}</StatusPill></article>)}</section>})}</div></ModulePage>}
