@@ -1,0 +1,21 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import React from 'react';
+import {JSDOM} from 'jsdom';
+const dom=new JSDOM('<!doctype html><html><body></body></html>',{url:'https://crm.example.com/collision-center'});
+Object.assign(globalThis,{window:dom.window,self:dom.window,document:dom.window.document,HTMLElement:dom.window.HTMLElement,MutationObserver:dom.window.MutationObserver,React,IS_REACT_ACT_ENVIRONMENT:true});
+Object.defineProperty(globalThis,'navigator',{value:dom.window.navigator,configurable:true});
+test('interactive CRM flows', async t=>{
+const {render,fireEvent,waitFor,cleanup}=await import('@testing-library/react');
+const {PathnameContext}=await import('next/dist/shared/lib/hooks-client-context.shared-runtime');
+const {LanguageProvider}=await import('../components/LanguageProvider');
+const {default:RecordModule}=await import('../components/RecordModule');
+const {default:CollisionCases}=await import('../components/CollisionCasesClient');
+const originalFetch=globalThis.fetch;const originalFormData=globalThis.FormData;
+const empty={company:{id:'company',name:'Test shop',timezone:'America/New_York'},integrations:{sms:false,ai:false,intake:true},contacts:[],vehicles:[],collision_cases:[],case_photos:[],repair_updates:[],leads:[],estimates:[],appointments:[],conversations:[],messages:[],phone_call_logs:[]};
+function wrapper(children:React.ReactNode){return <PathnameContext.Provider value="/collision-center"><LanguageProvider>{children}</LanguageProvider></PathnameContext.Provider>;}
+await t.test('live empty CRM never substitutes invented customers',async()=>{globalThis.fetch=async()=>new Response(JSON.stringify({cases:[],smsReady:false}));const view=render(wrapper(<CollisionCases/>));await waitFor(()=>assert(view.getByText('No cases to display yet.')));assert.equal(view.queryByText('Maria Rodriguez'),null);cleanup();globalThis.fetch=originalFetch;});
+await t.test('customer editor saves and reloads actual records',async()=>{globalThis.FormData=dom.window.FormData as any;let saved:any;const snapshot=structuredClone(empty);globalThis.fetch=async(url,opts)=>{if(opts?.method==='POST'){saved=JSON.parse(String(opts.body));snapshot.contacts.push({id:'contact',...saved} as never);return new Response(JSON.stringify({ok:true}));}return new Response(JSON.stringify(snapshot));};const view=render(wrapper(<RecordModule table="contacts"/>));await waitFor(()=>assert.equal((view.getByText('Add new') as HTMLButtonElement).disabled,false));fireEvent.click(view.getByText('Add new'));fireEvent.change(view.getByLabelText('Full name'),{target:{value:'Live customer'}});fireEvent.change(view.getByLabelText('Phone'),{target:{value:'+14845550111'}});fireEvent.submit(view.getByText('Save').closest('form')!);await waitFor(()=>assert.equal(saved?.full_name,'Live customer'));await waitFor(()=>assert(view.getByText('Live customer')));assert.equal(view.queryByText('Maria Rodriguez'),null);cleanup();globalThis.fetch=originalFetch;globalThis.FormData=originalFormData;});
+await t.test('repair stage saves without Twilio and cannot silently request SMS',async()=>{let payload:any;const row={id:'00000000-0000-4000-8000-000000000001',case_number:'NL-TEST',status:'new_intake',contacts:{full_name:'Live customer',phone:'+14845550111'},vehicles:{year:2022,make:'Honda',model:'Accord'},case_photos:[],repair_updates:[]};globalThis.fetch=async(url,opts)=>{if(opts?.method==='POST'){payload=JSON.parse(String(opts.body));return new Response(JSON.stringify({ok:true,mode:'live',update:{id:'update',stage:payload.stage,sms_status:'not_requested'}}));}return new Response(JSON.stringify({cases:[row],smsReady:false}));};const view=render(wrapper(<CollisionCases/>));await waitFor(()=>assert(view.getByText('View case')));fireEvent.click(view.getByText('View case'));const toggle=view.getByLabelText(/Also send an SMS/);assert.equal((toggle as HTMLInputElement).disabled,true);fireEvent.click(view.getByText('Save progress'));await waitFor(()=>assert.equal(payload?.notifyCustomer,false));assert.match(payload.requestId,/^[0-9a-f-]{36}$/);await waitFor(()=>assert(view.getByText('Progress saved without SMS.')));cleanup();globalThis.fetch=originalFetch;});
+
+});

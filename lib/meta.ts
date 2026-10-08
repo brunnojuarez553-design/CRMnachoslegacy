@@ -2,9 +2,9 @@ import crypto from "node:crypto";
 
 export function verifyMetaSignature(rawBody: string, signature: string | null) {
   const secret = process.env.META_APP_SECRET;
-  if (!secret || !signature) return process.env.NODE_ENV !== "production";
+  if (!secret || !signature) return false;
   const expected = `sha256=${crypto.createHmac("sha256", secret).update(rawBody).digest("hex")}`;
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  return Buffer.byteLength(expected) === Buffer.byteLength(signature) && crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
 }
 
 export async function sendWhatsAppText(to: string, body: string) {

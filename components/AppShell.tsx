@@ -46,6 +46,7 @@ export default function AppShell({ children, email }: { children: React.ReactNod
   const { language } = useLanguage();
   const c = copy[language];
   const [intelligenceOpen,setIntelligenceOpen]=useState(false);
+  const [search,setSearch]=useState("");
   return (
     <div className="app-shell collision-theme">
       <aside className="sidebar">
@@ -68,7 +69,7 @@ export default function AppShell({ children, email }: { children: React.ReactNod
                 const active = pathname === href || pathname.startsWith(`${href}/`);
                 return <Link key={href} href={href} className={active ? "active" : ""}>
                   <span className="nav-icon"><Icon size={18}/></span><span>{c.nav[key]}</span>
-                  {key === "conversations" && <em>4</em>}
+
                 </Link>;
               })}
             </div>
@@ -76,11 +77,6 @@ export default function AppShell({ children, email }: { children: React.ReactNod
         </nav>
 
         <div className="side-bottom">
-          <div className="mini-score">
-            <div className="mini-score-head"><span>{c.health}</span><strong>91</strong></div>
-            <div className="score-track"><i style={{width:"91%"}}/></div>
-            <small>{c.month}</small>
-          </div>
           <Link className="settings-button" href="/settings"><Settings size={18}/><span>{c.settings}</span></Link>
           <div className="plan-row"><span>PRO</span><small>{c.plan}</small></div>
         </div>
@@ -88,12 +84,12 @@ export default function AppShell({ children, email }: { children: React.ReactNod
 
       <main className="main-content">
         <header className="topbar">
-          <div className="global-search"><Search size={17}/><input placeholder={c.search}/><kbd>⌘ K</kbd></div>
+          <form className="global-search" action="/collision-center"><Search size={17}/><input name="q" placeholder={c.search} value={search} onChange={e=>setSearch(e.target.value)}/><button type="submit" className="text-button">{language==="es"?"Buscar":"Search"}</button></form>
           <div className="topbar-actions">
             <LanguageSwitch />
-            <button className="icon-button notification" aria-label="Notifications"><Bell size={18}/><i/></button>
+            <Link className="icon-button" href="/conversations" aria-label="Inbox"><Bell size={18}/></Link>
             <button className="ai-quick" onClick={()=>setIntelligenceOpen(true)}><Sparkles size={16}/> {c.intelligence}</button>
-            <div className="user-menu"><div className="avatar legacy-avatar"><img src="/nachos-legacy-logo.webp" alt="NL" /></div><div><strong>Nacho</strong><span>{email || c.owner}</span></div><ChevronDown size={15}/></div>
+            <div className="user-menu"><div className="avatar legacy-avatar"><img src="/nachos-legacy-logo.webp" alt="NL" /></div><div><strong>Nacho</strong><span>{email || c.owner}</span></div><button className="text-button" onClick={async()=>{const {createClient}=await import("@/lib/supabase/client");await createClient().auth.signOut();window.location.href="/login";}}>{language==="es"?"Salir":"Sign out"}</button></div>
           </div>
         </header>
         {children}

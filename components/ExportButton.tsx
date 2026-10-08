@@ -6,7 +6,8 @@ import { useLanguage } from "./LanguageProvider";
 export type ExportColumn<T> = { key: keyof T | string; label: string; value?: (row: T) => unknown };
 
 function csvEscape(value: unknown) {
-  const text = value == null ? "" : String(value);
+  let text = value == null ? "" : String(value);
+  if (typeof value === "string" && /^[=+@\-\t\r\n]/.test(text)) text = "\t" + text;
   return `"${text.replace(/"/g, '""')}"`;
 }
 

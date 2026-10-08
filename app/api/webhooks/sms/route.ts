@@ -1,22 +1,17 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { verifyTwilioSignature } from "@/lib/sms";
 export const runtime="nodejs";
-
-export async function POST(request:Request){
-  const form=await request.formData();
-  const from=String(form.get("From")||"");
-  const to=String(form.get("To")||"");
-  const body=String(form.get("Body")||"");
-  const externalId=String(form.get("MessageSid")||"");
-  if(!from||!to) return new NextResponse("Bad Request",{status:400});
-  const admin=createAdminClient();
-  await admin.from("webhook_events").insert({provider:"sms",event_type:"message",payload:Object.fromEntries(form.entries())});
-  const {data:connection}=await admin.from("channel_connections").select("company_id,id").eq("provider","sms").eq("external_account_id",to).maybeSingle();
-  if(!connection) return new NextResponse("OK",{status:200,headers:{"Content-Type":"text/plain"}});
-  let {data:contact}=await admin.from("contacts").select("id").eq("company_id",connection.company_id).eq("phone",from).maybeSingle();
-  if(!contact){const created=await admin.from("contacts").insert({company_id:connection.company_id,phone:from,full_name:from}).select("id").single(); contact=created.data;}
-  let {data:conversation}=await admin.from("conversations").select("id").eq("company_id",connection.company_id).eq("external_contact_id",from).eq("channel","sms").maybeSingle();
-  if(!conversation){const created=await admin.from("conversations").insert({company_id:connection.company_id,contact_id:contact?.id||null,channel:"sms",external_contact_id:from,status:"open"}).select("id").single();conversation=created.data;}
-  if(conversation) await admin.from("messages").insert({company_id:connection.company_id,conversation_id:conversation.id,direction:"inbound",external_id:externalId||null,body,message_type:"text",raw_payload:Object.fromEntries(form.entries())});
-  return new NextResponse("OK",{status:200,headers:{"Content-Type":"text/plain"}});
-}
+export async function POST(request:Request){try{
+ if(!process.env.TWILIO_AUTH_TOKEN)return new NextResponse("SMS not configured",{status:503});
+ const form=await request.formData();const params=Object.fromEntries([...form.entries()].map(([k,v])=>[k,String(v)]));
+ const callback=params.MessageStatus?process.env.TWILIO_STATUS_CALLBACK_URL:process.env.TWILIO_WEBHOOK_URL;
+ if(!callback||!verifyTwilioSignature(callback,params,request.headers.get("x-twilio-signature")))return new NextResponse("Invalid signature",{status:401});
+ if(params.AccountSid!==process.env.TWILIO_ACCOUNT_SID)return new NextResponse("Invalid account",{status:403});
+ const admin=createAdminClient();
+ if(params.MessageStatus){if(!params.MessageSid)return new NextResponse("Bad Request",{status:400});const{error}=await admin.from("repair_updates").update({sms_status:params.MessageStatus}).eq("sms_sid",params.MessageSid);if(error)throw error;return new NextResponse("OK");}
+ if(!params.From||!params.To||!params.MessageSid)return new NextResponse("Bad Request",{status:400});
+ const{data:connection,error}=await admin.from("channel_connections").select("company_id").eq("provider","sms").eq("external_account_id",params.To).eq("status","active").maybeSingle();if(error)throw error;if(!connection)return new NextResponse("SMS workspace not configured",{status:503});
+ const{error:saveError}=await admin.rpc("receive_nachos_sms",{p_company_id:connection.company_id,p_payload:params});if(saveError)throw saveError;
+ return new NextResponse("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>",{headers:{"Content-Type":"text/xml"}});
+}catch(error){console.error("SMS webhook failed",error);return new NextResponse("Unable to persist message",{status:503});}}
