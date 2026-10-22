@@ -4,7 +4,7 @@ import { verifyMetaSignature } from "@/lib/meta";
 export const runtime = "nodejs";
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  if (url.searchParams.get("hub.mode") === "subscribe" && url.searchParams.get("hub.verify_token") === process.env.META_VERIFY_TOKEN) return new NextResponse(url.searchParams.get("hub.challenge") || "");
+  if (process.env.META_VERIFY_TOKEN && url.searchParams.get("hub.mode") === "subscribe" && url.searchParams.get("hub.verify_token") === process.env.META_VERIFY_TOKEN) return new NextResponse(url.searchParams.get("hub.challenge") || "");
   return new NextResponse("Forbidden",{status:403});
 }
 export async function POST(request: Request) {

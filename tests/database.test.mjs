@@ -1,0 +1,32 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile,readdir} from 'node:fs/promises';
+import {PGlite} from '@electric-sql/pglite';
+test('database intake, progress, SMS deduplication and tenant isolation',async()=>{
+ const db=new PGlite();
+ await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create table auth.users(id uuid primary key);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;create function auth.role() returns text language sql stable as $$select nullif(current_setting('request.jwt.claim.role',true),'')$$;grant usage on schema auth to authenticated,service_role;grant execute on all functions in schema auth to authenticated,service_role;`);
+ for(const file of (await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort()){const sql=(await readFile('supabase/migrations/'+file,'utf8')).replace('create extension if not exists pgcrypto;','');await db.exec(sql);}
+ const payload={submissionId:'00000000-0000-4000-8000-000000000001',name:'Integration client',phone:'+14845550111',email:'test@example.com',vehicle:{year:2022,make:'Honda',model:'Accord'},intakeType:'collision',preferredLanguage:'es',description:'Rear bumper',photos:[{url:'https://example.com/photo.jpg'}],attribution:{source:'website',medium:'form'}};
+ const company=(await db.query("select id from companies where slug='nachos-legacy'")).rows[0].id;
+ await db.exec("set role service_role;select set_config('request.jwt.claim.role','service_role',false)");
+ const result=(await db.query('select create_nachos_intake($1,$2::jsonb) result',[company,JSON.stringify(payload)])).rows[0].result;assert.equal(result.duplicate,false);
+ const repeat=(await db.query('select create_nachos_intake($1,$2::jsonb) result',[company,JSON.stringify(payload)])).rows[0].result;assert.equal(repeat.caseId,result.caseId);assert.equal(repeat.duplicate,true);
+ for(const table of ['contacts','vehicles','leads','collision_cases','case_photos','conversations','messages'])assert.equal((await db.query(`select count(*)::int n from ${table}`)).rows[0].n,1,table);
+ const bad={...payload,submissionId:'00000000-0000-4000-8000-000000000002',photos:[{url:null}]};await assert.rejects(()=>db.query('select create_nachos_intake($1,$2::jsonb)',[company,JSON.stringify(bad)]));assert.equal((await db.query('select count(*)::int n from collision_cases')).rows[0].n,1,'photo failure rolls back the entire inquiry');
+ const next={...payload,submissionId:'00000000-0000-4000-8000-000000000003'};await db.query('select create_nachos_intake($1,$2::jsonb)',[company,JSON.stringify(next)]);assert.equal((await db.query('select count(*)::int n from contacts')).rows[0].n,1);assert.equal((await db.query('select count(*)::int n from vehicles')).rows[0].n,1);
+ await db.exec('reset role');const user='00000000-0000-4000-8000-000000000010';await db.query('insert into auth.users(id) values($1)',[user]);await db.query('insert into memberships(company_id,user_id) values($1,$2)',[company,user]);const other=(await db.query("insert into companies(name,slug) values('Other','other') returning id")).rows[0].id;await db.query("insert into contacts(company_id,full_name) values($1,'Other private client')",[other]);
+ await db.exec(`set role authenticated;select set_config('request.jwt.claim.role','authenticated',false);select set_config('request.jwt.claim.sub','${user}',false);`);
+ assert.equal((await db.query('select count(*)::int n from contacts')).rows[0].n,1,'other company contact remains hidden');
+ const requestId='00000000-0000-4000-8000-000000000020';const update=(await db.query('select save_nachos_progress($1,$2,$3,$4,$5,$6) result',[company,result.caseId,requestId,'repair_started','Progress saved',false])).rows[0].result;assert.equal(update.update.sms_status,'not_requested');
+ const again=(await db.query('select save_nachos_progress($1,$2,$3,$4,$5,$6) result',[company,result.caseId,requestId,'repair_started','Progress saved',false])).rows[0].result;assert.equal(again.duplicate,true);assert.equal((await db.query('select count(*)::int n from repair_updates')).rows[0].n,1);
+ assert.equal((await db.query('select status from collision_cases where id=$1',[result.caseId])).rows[0].status,'repair_started');
+ await assert.rejects(()=>db.query('select save_nachos_progress($1,$2,$3,$4,$5,$6)',[other,result.caseId,'00000000-0000-4000-8000-000000000021','paint','test',false]));
+ await assert.rejects(()=>db.query('select create_nachos_intake($1,$2::jsonb)',[company,JSON.stringify(payload)]),'authenticated role cannot call the service-only intake function');
+ await assert.rejects(()=>db.query('select * from channel_connections'),'provider credentials are private');
+ const otherContact=(await db.query('select id from contacts limit 1')).rows[0].id;
+ await db.exec('reset role');const foreignContact=(await db.query('select id from contacts where company_id=$1',[other])).rows[0].id;await db.exec('set role authenticated');
+ await assert.rejects(()=>db.query('insert into vehicles(company_id,contact_id,model) values($1,$2,$3)',[company,foreignContact,'Forbidden link']),'cross-company relations are rejected even via direct database writes');
+ await db.exec("reset role;set role service_role;select set_config('request.jwt.claim.role','service_role',false)");
+ const inbound={From:'+14845550111',To:'+14843625873',Body:'SMS test',MessageSid:'SM-test'};await db.query('select receive_nachos_sms($1,$2::jsonb)',[company,JSON.stringify(inbound)]);await db.query('select receive_nachos_sms($1,$2::jsonb)',[company,JSON.stringify(inbound)]);assert.equal((await db.query("select count(*)::int n from messages where external_id='SM-test'")).rows[0].n,1);
+ await db.close();
+});

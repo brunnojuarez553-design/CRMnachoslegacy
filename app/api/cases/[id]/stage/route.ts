@@ -1,101 +1,25 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { getAuthenticatedCompanyId } from "@/lib/internal-auth";
-import { buildRepairSms, REPAIR_STAGES, RepairStageKey } from "@/lib/repair-stages";
+import { requireWorkspace, ApiError } from "@/lib/internal-auth";
+import { apiError } from "@/lib/api";
+import { REPAIR_STAGES, RepairStageKey, buildRepairSms } from "@/lib/repair-stages";
+import { smsReady } from "@/lib/config";
 import { sendSmsText } from "@/lib/sms";
-
-const stageKeys = REPAIR_STAGES.map((stage) => stage.key) as [RepairStageKey, ...RepairStageKey[]];
-const schema = z.object({ stage: z.enum(stageKeys), notifyCustomer: z.boolean().default(true), message: z.string().min(1).max(1200).optional() });
-export const runtime = "nodejs";
-
-export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+const schema=z.object({requestId:z.string().uuid(),stage:z.enum(REPAIR_STAGES.map(s=>s.key) as [RepairStageKey,...RepairStageKey[]]),notifyCustomer:z.boolean().default(false),message:z.string().trim().min(1).max(1200).optional()});
+export async function POST(request:Request,context:{params:Promise<{id:string}>}) {
   try {
-    const { id } = await context.params;
-    const input = schema.parse(await request.json());
-    const demoMode = id.startsWith("demo-") || !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-    if (demoMode) {
-      const now = new Date().toISOString();
-      return NextResponse.json({
-        ok: true,
-        mode: "demo",
-        stage: input.stage,
-        message: input.message || buildRepairSms({ stage: input.stage, customerName: "Maria Rodriguez", vehicle: "2022 Honda Accord", language: "en" }),
-        update: {
-          id: `demo-${Date.now()}`,
-          stage: input.stage,
-          customer_message: input.message || null,
-          sms_status: input.notifyCustomer ? "sent" : "not_requested",
-          sms_sid: input.notifyCustomer ? `DEMO-SMS-${Date.now()}` : null,
-          notified_at: input.notifyCustomer ? now : null,
-          created_at: now
-        }
-      });
+    const {supabase,company}=await requireWorkspace();const {id}=await context.params;z.string().uuid().parse(id);const input=schema.parse(await request.json());
+    if(input.notifyCustomer&&!smsReady())throw new ApiError(409,"Twilio is not configured. Save progress without sending an SMS.");
+    const {data:row,error}=await supabase.from("collision_cases").select("*,contacts:contacts!collision_cases_contact_id_fkey(*),vehicles:vehicles!collision_cases_vehicle_id_fkey(*)").eq("company_id",company.id).eq("id",id).single();if(error||!row)throw new ApiError(404,"Case not found");
+    const contact=Array.isArray(row.contacts)?row.contacts[0]:row.contacts;const vehicle=Array.isArray(row.vehicles)?row.vehicles[0]:row.vehicles;
+    if(input.notifyCustomer&&!contact?.phone)throw new ApiError(400,"Customer phone is missing");
+    const message=input.message||buildRepairSms({stage:input.stage,customerName:contact?.full_name,vehicle:[vehicle?.year,vehicle?.make,vehicle?.model].filter(Boolean).join(" "),language:row.preferred_language==="es"?"es":"en"});
+    const {data:result,error:saveError}=await supabase.rpc("save_nachos_progress",{p_company_id:company.id,p_case_id:id,p_request_id:input.requestId,p_stage:input.stage,p_message:message,p_notify:input.notifyCustomer});if(saveError)throw saveError;
+    let warning:string|undefined;
+    if(input.notifyCustomer&&!result.duplicate){
+      try {const sent=await sendSmsText(contact.phone,message);const {error:logError}=await supabase.rpc("record_nachos_sms",{p_company_id:company.id,p_update_id:result.update.id,p_sid:sent.sid,p_status:sent.status||"queued"});if(logError){console.error("SMS log failed",logError);warning="Progress saved; provider accepted SMS but delivery logging needs review.";}else{result.update.sms_status=sent.status||"queued";result.update.sms_sid=sent.sid;}}
+      catch(error){console.error("SMS failed",error);const {error:logError}=await supabase.from("repair_updates").update({sms_status:"failed"}).eq("company_id",company.id).eq("id",result.update.id);if(logError)console.error(logError);result.update.sms_status="failed";warning="Progress saved. SMS could not be confirmed; check Twilio before sending again.";}
     }
-
-    const companyId = await getAuthenticatedCompanyId();
-    if (!companyId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const admin = createAdminClient();
-
-    const { data: repairCase, error: caseError } = await admin
-      .from("collision_cases")
-      .select(`id, company_id, case_number, preferred_language,
-        contacts:contacts!collision_cases_contact_id_fkey(id, full_name, phone, preferred_language),
-        vehicles:vehicles!collision_cases_vehicle_id_fkey(year, make, model)`)
-      .eq("id", id)
-      .eq("company_id", companyId)
-      .single();
-    if (caseError || !repairCase) return NextResponse.json({ error: "Case not found" }, { status: 404 });
-
-    const contact = Array.isArray(repairCase.contacts) ? repairCase.contacts[0] : repairCase.contacts;
-    const vehicle = Array.isArray(repairCase.vehicles) ? repairCase.vehicles[0] : repairCase.vehicles;
-    const preferredLanguage = ((contact?.preferred_language || repairCase.preferred_language || "en") === "es" ? "es" : "en") as "en" | "es";
-    const vehicleLabel = [vehicle?.year, vehicle?.make, vehicle?.model].filter(Boolean).join(" ");
-    const message = input.message || buildRepairSms({ stage: input.stage, customerName: contact?.full_name, vehicle: vehicleLabel, language: preferredLanguage });
-
-    let smsStatus = "not_requested";
-    let smsSid: string | null = null;
-    let notifiedAt: string | null = null;
-    if (input.notifyCustomer) {
-      if (!contact?.phone) return NextResponse.json({ error: "Customer phone number is missing" }, { status: 400 });
-      const result = await sendSmsText(contact.phone, message) as { sid?: string };
-      smsStatus = "sent";
-      smsSid = result.sid || null;
-      notifiedAt = new Date().toISOString();
-
-      let { data: conversation } = await admin.from("conversations").select("id")
-        .eq("company_id", companyId).eq("channel", "sms").eq("external_contact_id", contact.phone).maybeSingle();
-      if (!conversation) {
-        const created = await admin.from("conversations").insert({ company_id: companyId, contact_id: contact.id || null, channel: "sms", external_contact_id: contact.phone, status: "open", preferred_language: preferredLanguage, last_message_at: notifiedAt }).select("id").single();
-        conversation = created.data;
-      }
-      if (conversation?.id) {
-        await admin.from("messages").insert({ company_id: companyId, conversation_id: conversation.id, direction: "outbound", external_id: smsSid, body: message, message_type: "text", detected_language: preferredLanguage, raw_payload: { source: "repair_progress", case_id: id, stage: input.stage } });
-        await admin.from("conversations").update({ last_message_at: notifiedAt }).eq("id", conversation.id);
-      }
-    }
-
-    const now = new Date().toISOString();
-    const { error: updateError } = await admin.from("collision_cases").update({ status: input.stage, updated_at: now }).eq("id", id).eq("company_id", companyId);
-    if (updateError) throw updateError;
-
-    const { data: update, error: repairUpdateError } = await admin.from("repair_updates").insert({
-      company_id: companyId,
-      case_id: id,
-      stage: input.stage,
-      note: null,
-      customer_visible: input.notifyCustomer,
-      customer_message: message,
-      sms_status: smsStatus,
-      sms_sid: smsSid,
-      notified_at: notifiedAt,
-    }).select("id,stage,customer_message,sms_status,sms_sid,notified_at,created_at").single();
-    if (repairUpdateError) throw repairUpdateError;
-
-    return NextResponse.json({ ok: true, mode: "live", stage: input.stage, message, update });
-  } catch (error) {
-    console.error("Repair stage update error", error);
-    if (error instanceof z.ZodError) return NextResponse.json({ error: "Invalid stage update" }, { status: 400 });
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to update repair stage" }, { status: 500 });
-  }
+    return NextResponse.json({ok:true,mode:"live",...result,stage:input.stage,warning});
+  }catch(error){return apiError(error);}
 }

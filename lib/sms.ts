@@ -1,14 +1,6 @@
-export async function sendSmsText(to: string, body: string) {
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_PHONE_NUMBER;
-  if (!sid || !token || !from) throw new Error("SMS credentials are missing");
-  const payload = new URLSearchParams({ To: to, From: from, Body: body });
-  const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
-    method: "POST",
-    headers: { Authorization: `Basic ${Buffer.from(`${sid}:${token}`).toString("base64")}`, "Content-Type": "application/x-www-form-urlencoded" },
-    body: payload.toString()
-  });
-  if (!response.ok) throw new Error(`SMS provider error: ${await response.text()}`);
-  return response.json();
+import { createHmac,timingSafeEqual } from "node:crypto";
+export function verifyTwilioSignature(url:string,params:Record<string,string>,signature:string|null,token=process.env.TWILIO_AUTH_TOKEN){
+ if(!token||!signature)return false;const text=Object.keys(params).sort().reduce((s,k)=>s+k+params[k],url);const expected=createHmac("sha1",token).update(text).digest("base64");return Buffer.byteLength(expected)===Buffer.byteLength(signature)&&timingSafeEqual(Buffer.from(expected),Buffer.from(signature));
 }
+export async function sendSmsText(to:string,body:string){const sid=process.env.TWILIO_ACCOUNT_SID,token=process.env.TWILIO_AUTH_TOKEN,from=process.env.TWILIO_PHONE_NUMBER;if(!sid||!token||!from)throw new Error("Twilio is not configured");const payload=new URLSearchParams({To:to,From:from,Body:body});if(process.env.TWILIO_STATUS_CALLBACK_URL)payload.set("StatusCallback",process.env.TWILIO_STATUS_CALLBACK_URL);
+ const r=await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,{method:"POST",headers:{Authorization:`Basic ${Buffer.from(`${sid}:${token}`).toString("base64")}`,"Content-Type":"application/x-www-form-urlencoded"},body:payload.toString(),signal:AbortSignal.timeout(12000)});if(!r.ok)throw new Error("Twilio could not accept the message");return r.json() as Promise<{sid:string;status:string}>;}

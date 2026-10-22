@@ -1,14 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
-
-export async function getAuthenticatedCompanyId() {
+import { databaseReady } from "@/lib/config";
+export class ApiError extends Error { constructor(public status: number, message: string) { super(message); } }
+export async function requireWorkspace() {
+  if (!databaseReady()) throw new ApiError(503, "CRM database is not configured");
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-  const { data: membership } = await supabase
-    .from("memberships")
-    .select("company_id")
-    .eq("user_id", user.id)
-    .limit(1)
-    .maybeSingle();
-  return membership?.company_id ?? null;
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) throw new ApiError(401, "Please sign in again");
+  const { data: company, error: companyError } = await supabase.from("companies").select("id,name,slug,timezone,currency").eq("slug", process.env.NACHOS_COMPANY_SLUG || "nachos-legacy").maybeSingle();
+  if (companyError) throw new ApiError(503, "Unable to load workspace");
+  if (!company) throw new ApiError(403, "Your account is not assigned to Nacho's Legacy");
+  return { supabase, company, user };
 }
+export async function getAuthenticatedCompanyId() { try { return (await requireWorkspace()).company.id as string; } catch { return null; } }

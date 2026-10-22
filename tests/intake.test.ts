@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { Intake,normalizePhone } from '../lib/intake';
+import { verifyTwilioSignature } from '../lib/sms';
+import { createHmac } from 'node:crypto';
+import { verifyMetaSignature } from '../lib/meta';
+const request={submissionId:'00000000-0000-4000-8000-000000000001',name:'Test client',phone:'(484) 362-5873',vehicle:{raw:'2022 Honda Accord'}};
+test('valid website intake normalizes US phone and preserves language defaults',()=>{const input=Intake.parse(request);assert.equal(input.phone,'+14843625873');assert.equal(input.preferredLanguage,'en');assert.equal(normalizePhone('+54 2901 123456'),'+542901123456');});
+test('email-only concierge inquiry is valid',()=>{assert.equal(Intake.parse({...request,phone:'',email:'client@example.com'}).phone,'');});
+test('invalid contact, excessive photos, insecure URLs and missing vehicle are rejected',()=>{for(const bad of [{...request,phone:'abc'},{...request,phone:'',email:''},{...request,vehicle:{}},{...request,photos:Array(11).fill({url:'https://example.com/photo.jpg'})},{...request,photos:[{url:'javascript:alert(1)'}]},{...request,submissionId:'invalid'}])assert.equal(Intake.safeParse(bad).success,false);});
+test('Twilio signature includes exact URL and every sorted POST parameter',()=>{const url='https://crm.example.com/api/webhooks/sms';const params={To:'+14843625873',From:'+16105550111',Body:'Test'};const text=url+'BodyTestFrom+16105550111To+14843625873';const signature=createHmac('sha1','test-token').update(text).digest('base64');assert(verifyTwilioSignature(url,params,signature,'test-token'));assert(!verifyTwilioSignature(url,{...params,Body:'Changed'},signature,'test-token'));assert(!verifyTwilioSignature(url,params,'x','test-token'));});
+test('Meta rejects missing and malformed signatures without throwing',()=>{delete process.env.META_APP_SECRET;assert.equal(verifyMetaSignature('{}',null),false);process.env.META_APP_SECRET='test';assert.equal(verifyMetaSignature('{}','short'),false);delete process.env.META_APP_SECRET;});
+test('internal endpoints fail closed without configuration rather than returning demo records',async()=>{delete process.env.NEXT_PUBLIC_SUPABASE_URL;const {GET}=await import('../app/api/cases/route');const r=await GET();assert.equal(r.status,503);const body=await r.json();assert.equal(body.cases,undefined);const {POST}=await import('../app/api/messages/send/route');const sent=await POST(new Request('http://localhost/api/messages/send',{method:'POST',body:'{}'}));assert.equal(sent.status,503);});
