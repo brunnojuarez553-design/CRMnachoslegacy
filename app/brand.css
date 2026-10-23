@@ -9,7 +9,7 @@ button:disabled{cursor:not-allowed;opacity:.5}button,a{touch-action:manipulation
 .collision-theme .main-content{min-width:0;background:radial-gradient(ellipse at 90% 0,rgba(225,53,54,.035),transparent 35%),var(--brand-ink)}
 /* Navigation and header */
 .collision-theme .sidebar{display:flex;background:#0d0f11;padding:24px 16px 16px;border-right:1px solid var(--brand-line);height:100dvh;max-height:100dvh;overflow:hidden}
-.collision-theme .brand-row{position:relative;height:auto;min-height:60px;padding:0 4px;gap:12px;flex:0 0 auto}
+.collision-theme .brand-row{justify-content:flex-start;position:relative;height:auto;min-height:60px;padding:0 4px;gap:12px;flex:0 0 auto}
 .collision-theme .legacy-brand-logo{width:48px;height:48px;flex:0 0 48px;background:transparent;border:0;box-shadow:none;border-radius:0;display:grid;place-items:center}
 .collision-theme .legacy-brand-logo img{width:100%;height:100%;object-fit:contain}
 .collision-theme .brand-copy{display:flex;min-width:0}.collision-theme .brand-copy strong{font-size:14px;font-weight:650;letter-spacing:-.02em;white-space:nowrap}.collision-theme .brand-copy span{font-size:10px;color:#a6a8ad;line-height:1.5}
@@ -22,6 +22,7 @@ button:disabled{cursor:not-allowed;opacity:.5}button,a{touch-action:manipulation
 .collision-theme .main-nav a>span:not(.nav-icon){display:inline}.collision-theme .main-nav a:hover,.collision-theme .settings-button:hover{background:rgba(246,244,239,.05);color:white;transform:none}
 .collision-theme .main-nav a.active,.collision-theme .settings-button.active{background:rgba(225,53,54,.10);border-color:rgba(225,53,54,.2);box-shadow:inset 2px 0 0 var(--brand-red);color:white}
 .collision-theme .main-nav a.active .nav-icon{color:#f16a6b}.collision-theme .nav-icon{width:20px;flex:0 0 20px}
+.collision-theme .settings-button span{display:inline}
 .collision-theme .side-bottom{display:block;position:relative;flex:0 0 auto;margin-top:14px;padding-top:12px;background:#0d0f11;border-top:1px solid var(--brand-line)}
 .collision-theme .plan-row{display:flex;padding:8px 12px;gap:8px}.collision-theme .plan-row span{background:rgba(225,53,54,.12);color:#f58b8b;font-size:8px}.collision-theme .plan-row small{color:#a6a8ad;font-size:10px}
 .collision-theme .topbar{display:flex;gap:18px;min-height:80px;height:auto;padding:16px 30px;position:sticky;top:0;z-index:40;background:rgba(16,18,20,.94);backdrop-filter:blur(16px);border-bottom:1px solid var(--brand-line);flex-wrap:nowrap}
